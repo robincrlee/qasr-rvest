@@ -1,8 +1,10 @@
 ---
 title: "QASR Workshop - Web Scraping with R"
-output: html_notebook
-author: Robin Lee (robincrlee@gmail.com)
-date: 2017-03-23
+author: "Robin Lee (robincrlee@gmail.com)"
+date: '2017-03-23'
+output:
+  html_document: default
+  html_notebook: default
 ---
 
 ## Different ways you can get data
@@ -29,8 +31,8 @@ For downloading html table, using this method might take more time than copy and
 
 ## Packages 
 
-```{r}
-install.packages("rvest")
+```{r, echo=TRUE, message=TRUE, warning=FALSE}
+# install.packages("rvest")
 # or you can use 
 # install.packages("devtools")
 # devtools::install_github("hadley/rvest")
@@ -41,7 +43,7 @@ library(tidyverse)
 
 ## Codes to scrape the example
 
-```{r}
+```{r, echo=TRUE}
 
 wiki_mr_page <- read_html("https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_mortality_rate")
 
@@ -124,7 +126,8 @@ This is saying that we should select span element under the element whose id is 
 
 We can pick the first element or all the elements. 
 
-Another example - 
+### Another example:
+What does html_attr() do?
 
 ```{r}
 cast_try3 <- lego_movie %>%
@@ -136,8 +139,9 @@ cast_try3
 
 ```
 
+Doesn't seem too useful in this case. 
 
-What if I want to get the links to the specific actor and do more scraping?
+However, what if I want to get the links to the specific actor and do more scraping?
 
 ```{r}
 
@@ -154,7 +158,7 @@ cast_try4
 It's possible to submit an html form and get the result. 
 See demo in rvest github repo
 
-```{r}
+```{r, eval=FALSE, include=FALSE}
 
 united <- html_session("http://www.united.com/")
 
