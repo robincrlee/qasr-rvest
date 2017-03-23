@@ -1,0 +1,185 @@
+---
+title: "QASR Workshop - Web Scraping with R"
+output: html_notebook
+author: Robin Lee (robincrlee@gmail.com)
+date: 2017-03-23
+---
+
+## Different ways you can get data
+Data might exist as flat file (csv, txt, stata files, spss files) as a direct download. The data might be in a database, where you can get a flatfile exported. But sometimes, you need to prepare your own flat files. The data could also be obtained using some API. Or they might exist in html document as a clean table or somewhat organized manner. 
+
+We will cover the last piece today. This topic is especially helpful if an applied statistician wants to bring outside data that's not already provided by her/his company or research group. 
+
+
+## Examples
+1. Download HTML Table
+https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_mortality_rate#Countries
+
+
+2. Download stuff in HTML document that's not already a table
+We want to get the rating for this movie. "http://www.imdb.com/title/tt1490017/"
+
+
+## Why learn webscraping in R with rvest?
+We can practice programming and data cleaning. We can also get familiar with html document and using inspect element. Knowing these will make you more comfortable to learn using javascript for data visualization or understand web tagging better. 
+
+From strictly data analysis perspective, you can get DATA and remember how you got the data. 
+For downloading html table, using this method might take more time than copy and paste, but much more reproducible. 
+
+
+## Packages 
+
+```{r}
+install.packages("rvest")
+# or you can use 
+# install.packages("devtools")
+# devtools::install_github("hadley/rvest")
+#install.packages("tidyverse")
+library(rvest)
+library(tidyverse)
+```
+
+## Codes to scrape the example
+
+```{r}
+
+wiki_mr_page <- read_html("https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_mortality_rate")
+
+
+table <- wiki_mr_page %>%  
+  html_nodes(xpath = '//*[@id="mw-content-text"]/table')  %>%  
+  html_table(fill=TRUE)
+
+str(table)
+table_df <- table[[1]]
+
+# try using css selector
+
+table2 <- wiki_mr_page %>%
+  html_nodes('#mw-content-text > table') %>%
+  html_table(fill=TRUE)
+
+table2_df <- table2[[1]]
+
+
+```
+We know by looking at the html table in the wiki page that the column won't line up correctly. 
+But we can do some cleaning on our own!
+
+```{r}
+table_df_cleaned <- table_df[2:nrow(table_df),]
+head(table_df_cleaned)
+names(table_df_cleaned)
+```
+
+### be prepared for surprises!
+However, we might not always get what we expected to get.... here's an example if we only try scraping the table content.
+```{r}
+# stuff happens....
+table_content <- wiki_mr_page %>%
+  html_nodes('#mw-content-text > table > tbody')
+
+str(table_content)
+length(table_content)
+
+```
+
+## Example 2 
+Getting rating from imdb. This is an example from rvest github page. 
+http://www.imdb.com/title/tt1490017/
+
+We can use selector gadget this time. 
+
+```{r}
+lego_movie <- read_html("http://www.imdb.com/title/tt1490017/")
+
+rating <- lego_movie %>% 
+  html_nodes("strong span") %>%
+  html_text() %>%
+  as.numeric()
+rating
+
+```
+
+The general pattern of functions you need is this 
+1) read the html node
+2) pick the node(s)
+3) use the specific parsing method 
+
+```{r}
+cast <- lego_movie %>%
+  html_nodes("#titleCast .itemprop span") %>%
+  html_text()
+cast 
+
+cast_try2 <- lego_movie %>%
+  html_node("#titleCast .itemprop span") %>%
+  html_text()
+
+cast_try2
+
+```
+
+This is saying that we should select span element under the element whose id is "titleCast" and class as "itemprop". And then parse the text within those elements.
+
+We can pick the first element or all the elements. 
+
+Another example - 
+
+```{r}
+cast_try3 <- lego_movie %>%
+  html_nodes("#titleCast .itemprop span") %>%
+  html_attr("itemprop")
+
+cast_try3
+
+
+```
+
+
+What if I want to get the links to the specific actor and do more scraping?
+
+```{r}
+
+
+cast_try4 <- lego_movie %>%
+  html_nodes("#titleCast .itemprop a") %>%
+  html_attr("href")
+
+cast_try4
+```
+
+
+## other examples
+It's possible to submit an html form and get the result. 
+See demo in rvest github repo
+
+```{r}
+
+united <- html_session("http://www.united.com/")
+
+login_form <- united %>%
+  html_node("form[name=LoginForm]") %>%
+  html_form() 
+login_form
+login <- login_form %>%
+  set_values(
+    MpNumber = "GY797363",
+    Password = password
+    
+  )
+logged_in <- united %>% submit_form(login)
+logged_in %>%
+  follow_link("View account") %>%
+  html_node("#ctl00_ContentInfo_AccountSummary_spanEliteMilesNew") %>%
+  html_text() %>%
+  readr::parse_number()
+```
+
+## References
+1. CSS selectors
+https://www.w3schools.com/cssref/css_selectors.asp
+2. rvest demo
+https://github.com/hadley/rvest/tree/master/demo
+
+
