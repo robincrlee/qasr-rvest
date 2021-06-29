@@ -49,7 +49,7 @@ wiki_mr_page <- read_html("https://en.wikipedia.org/wiki/List_of_sovereign_state
 
 
 table <- wiki_mr_page %>%  
-  html_nodes(xpath = '//*[@id="mw-content-text"]/table')  %>%  
+  html_nodes(xpath = '/html/body/div[3]/div[3]/div[5]/div[1]/table')  %>%  
   html_table(fill=TRUE)
 
 str(table)
